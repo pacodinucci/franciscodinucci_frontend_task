@@ -1,3 +1,6 @@
+### To run the app:
+npm run dev
+
 ## How to Make Steps Persistent
 
 To make steps persistent, I am already using Redux, so I would choose **Redux-persist**. This library allows us to keep the Redux state in `localStorage`, ensuring that the steps remain consistent even after a page reload or browser close. 
