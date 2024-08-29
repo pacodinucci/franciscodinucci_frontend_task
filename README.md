@@ -8,8 +8,12 @@ To make steps persistent, I am already using Redux, so I would choose **Redux-pe
 
 ## How to Scale for Larger Files
 
-The best way for processing large files from server-side would be dividing the file data with Lazy Loading with tools like
-**Web Workers** or **File Reader**. Another alternative to work with large files from server-side would be **IndexedDB**.
+The best way for processing large files from client-side would be dividing the file data with Lazy Loading with tools like
+**Web Workers** or **File Reader**. 
+
+### Alternatives:
+
+Another alternative to work with large files from server-side would be **IndexedDB**.
 
 
 By implementing these methods, we can ensure efficient processing and persistence of state, even when dealing with large files or requiring cross-device continuity.
