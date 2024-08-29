@@ -13,7 +13,7 @@ const UploadStep = () => {
   const dispatch = useDispatch();
   const uploadedFile = useSelector(
     (state: RootState) => state.leads.uploadedFile
-  ); // Use Redux state
+  );
   const fileName = useSelector((state: RootState) => state.leads.fileName);
 
   const handleFileUpload = (uploadedFile: File, leadsCount: number) => {
