@@ -4,6 +4,7 @@ import "./globals.css";
 import Sidebar from "@/components/SidebarMenu";
 import Footer from "@/components/Footer";
 import { Providers } from "@/redux/provider/providers";
+import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -29,6 +30,7 @@ export default function RootLayout({
           </div>
           <Footer />
         </Providers>
+        <Toaster />
       </body>
     </html>
   );

@@ -20,6 +20,7 @@ export interface StepCounterProps {
 export interface LeadState {
   leads: Lead[];
   fileName: string | null;
+  totalErrorRecords: number;
 }
 
 export interface HeaderBarProps {

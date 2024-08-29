@@ -4,6 +4,7 @@ import { Lead, LeadState } from "@/lib/types";
 const initialState: LeadState = {
   leads: [],
   fileName: null,
+  totalErrorRecords: 0,
 };
 
 const leadsSlice = createSlice({
@@ -21,9 +22,16 @@ const leadsSlice = createSlice({
       state.leads = [];
       state.fileName = null;
     },
+    setTotalErrorRecords: (state, action: PayloadAction<number>) => {
+      state.totalErrorRecords = action.payload;
+    },
+    addLeads: (state, action: PayloadAction<Lead[]>) => {
+      state.leads = [...state.leads, ...action.payload];
+    },
   },
 });
 
-export const { setLeads, clearLeads } = leadsSlice.actions;
+export const { setLeads, clearLeads, setTotalErrorRecords, addLeads } =
+  leadsSlice.actions;
 
 export default leadsSlice.reducer;

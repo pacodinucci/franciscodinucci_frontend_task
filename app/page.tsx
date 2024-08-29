@@ -4,7 +4,6 @@ import ButtonsBar from "@/components/ButtonsBar";
 import HeaderBar from "@/components/HeaderBar";
 import Steps from "@/components/Steps";
 import UploadStep from "@/components/UploadStep";
-import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import LeadsTable from "@/components/LeadsTable";
@@ -14,13 +13,7 @@ export default function Home() {
     (state: RootState) => state.steps.currentStep
   );
 
-  const leads = useSelector((state: RootState) => state.leads.leads);
   const fileName = useSelector((state: RootState) => state.leads.fileName);
-
-  useEffect(() => {
-    console.log(leads);
-    console.log(fileName);
-  }, [leads, fileName]);
 
   return (
     <main className="flex flex-col h-full">
@@ -30,7 +23,9 @@ export default function Home() {
         {(currentStep === "Upload" || currentStep === "Review") && (
           <UploadStep />
         )}
-        {currentStep === "Validation" && <LeadsTable />}
+        {(currentStep === "Validation" || currentStep === "Confirmation") && (
+          <LeadsTable />
+        )}
       </div>
       <ButtonsBar />
     </main>

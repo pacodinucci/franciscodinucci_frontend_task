@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { StepsState } from "@/lib/types";
 
-const steps = ["Upload", "Review", "Validation", "Confirm", "Complete"];
+const steps = ["Upload", "Review", "Validation", "Confirmation", "Complete"];
 
 const initialState: StepsState = {
   currentStep: steps[0],

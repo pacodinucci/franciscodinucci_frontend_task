@@ -41,7 +41,7 @@ const Sidebar: React.FC = () => {
       </div>
       <div className="p-4">
         <SidebarSeparator />
-        <div className="flex justify-between items-center p-4">
+        <div className="flex justify-between items-center p-4 cursor-pointer">
           <Image src="/slack.png" alt="slack logo" width={20} height={0} />
           <p className={`${sofia.className} text-sm text-slate-700`}>
             Join our community
@@ -54,7 +54,7 @@ const Sidebar: React.FC = () => {
           />
         </div>
         <SidebarSeparator />
-        <div className="flex items-center space-x-4 bg-avatarBg rounded-full px-4 py-2 border border-gray-300">
+        <div className="flex items-center space-x-4 bg-avatarBg rounded-full px-4 py-2 border border-gray-300 cursor-pointer">
           <Image
             src="https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250"
             alt="avatar"

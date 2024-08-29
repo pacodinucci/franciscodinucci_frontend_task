@@ -1,21 +1,35 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
 import { Lead } from "@/lib/types";
 import { sofia } from "@/lib/fonts";
 import ToggleSwitch from "./ui/toggle-switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
+import {
+  setTotalErrorRecords,
+  setLeads,
+  addLeads,
+} from "@/redux/slices/leadsSlice";
+import useFirebaseLeads from "@/hooks/useFirebaseLeads";
 
 const LeadsTable = () => {
+  const dispatch = useDispatch();
   const reduxLeads = useSelector((state: RootState) => state.leads.leads);
+  const reduxFileName = useSelector((state: RootState) => state.leads.fileName);
+  const reduxErrorRecords = useSelector(
+    (state: RootState) => state.leads.totalErrorRecords
+  );
+  const firebaseLeads = useFirebaseLeads();
 
   const [leadsState, setLeadsState] = useState<Lead[]>([]);
   const [errorsState, setErrorsState] = useState<Record<number, any>>({});
   const [showInvalidOnly, setShowInvalidOnly] = useState(false);
-
-  useEffect(() => {
-    console.log(leadsState);
-  }, [leadsState]);
 
   const [errorsCount, setErrorsCount] = useState({
     name: 0,
@@ -25,10 +39,26 @@ const LeadsTable = () => {
   });
 
   useEffect(() => {
+    if (firebaseLeads.length > 0) {
+      const newLeads = firebaseLeads.filter(
+        (firebaseLead) =>
+          !reduxLeads.some(
+            (reduxLead) =>
+              reduxLead.linkedinProfileUrl === firebaseLead.linkedinProfileUrl
+          )
+      );
+      if (newLeads.length > 0) {
+        dispatch(addLeads(newLeads));
+      }
+    }
+  }, [firebaseLeads, reduxLeads, dispatch]);
+
+  useEffect(() => {
     setLeadsState(reduxLeads);
     const errors = validateAllLeads(reduxLeads);
     setErrorsState(errors);
     calculateErrorsCount(errors);
+    calculateTotalErrorRecords(errors);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reduxLeads]);
 
@@ -49,8 +79,16 @@ const LeadsTable = () => {
     };
 
     if (!lead.lastName) errors.lastName = true;
-    if (!/^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$/.test(lead.companyDomain))
+
+    if (!lead.name) errors.name = true;
+
+    const companyDomainRegex =
+      /^(https?:\/\/www\.|www\.)?[a-zA-Z0-9-]+(\.[a-zA-Z]{2,3})(\/)?$/;
+
+    if (!companyDomainRegex.test(lead.companyDomain)) {
       errors.companyDomain = true;
+    }
+
     if (
       !/^https:\/\/[a-z]{2,3}\.linkedin\.com\/.*$/.test(lead.linkedinProfileUrl)
     )
@@ -77,6 +115,14 @@ const LeadsTable = () => {
     setErrorsCount(errorCount);
   };
 
+  const calculateTotalErrorRecords = (errors: Record<number, any>) => {
+    const totalErrorRecords = Object.values(errors).filter((error) =>
+      Object.values(error).some((isError) => isError)
+    ).length;
+
+    dispatch(setTotalErrorRecords(totalErrorRecords));
+  };
+
   const handleInputChange = (
     index: number,
     field: keyof Lead,
@@ -88,10 +134,13 @@ const LeadsTable = () => {
     updatedLeads[index] = updatedLead;
     setLeadsState(updatedLeads);
 
+    dispatch(setLeads({ leads: updatedLeads, fileName: reduxFileName ?? "" }));
+
     const updatedErrors = { ...errorsState };
     updatedErrors[index] = validateLead(updatedLead);
     setErrorsState(updatedErrors);
     calculateErrorsCount(updatedErrors);
+    calculateTotalErrorRecords(updatedErrors);
   };
 
   const totalErrors = Object.values(errorsState).reduce(
@@ -103,7 +152,6 @@ const LeadsTable = () => {
   return (
     <div className="p-4">
       <div className="bg-white rounded-lg border border-gray-300">
-        {/* Encabezado de la tabla */}
         <div
           className={`${sofia.className} py-2 px-4 flex justify-between items-center`}
         >
@@ -139,19 +187,17 @@ const LeadsTable = () => {
             </span>
           </div>
         </div>
-        {/* Contenedor de la tabla con borde redondeado y altura máxima */}
         <div className="overflow-hidden rounded-b-lg max-h-[36rem] overflow-y-auto scrollbar-custom">
           <table className="min-w-full bg-white border-separate border-spacing-0">
-            {/* Agregar las clases sticky y top-0 para el encabezado */}
             <thead
               className={`${sofia.className} uppercase text-neutral-700 sticky top-0 bg-white z-10`}
             >
               <tr>
                 <th className="py-2 border border-gray-300 text-left w-[2%] bg-gray-100"></th>
-                <th className="py-2 border border-gray-300 text-left px-4 w-[24%] bg-gray-100">
+                <th className="py-2 border border-gray-300 text-left px-4 w-[24%] bg-gray-100 relative">
                   Name
                   {errorsCount.name > 0 && (
-                    <span className="ml-2 text-red-500">
+                    <span className="ml-2 text-red-400 absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-x-1 bg-red-100 rounded-full px-2">
                       <Image
                         src="/close-circle.svg"
                         alt="error icon"
@@ -162,15 +208,16 @@ const LeadsTable = () => {
                     </span>
                   )}
                 </th>
-                <th className="py-2 border border-gray-300 text-left px-4 w-[24%] bg-gray-100">
+                <th className="py-2 border border-gray-300 text-left px-4 w-[24%] bg-gray-100 relative">
                   Last Name
                   {errorsCount.lastName > 0 && (
-                    <span className="ml-2 text-red-500">
+                    <span className="ml-2 text-red-400 absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-x-1 bg-red-100 rounded-full px-2">
                       <Image
                         src="/close-circle.svg"
                         alt="error icon"
                         width={15}
                         height={0}
+                        className="mb-1"
                       />
                       {errorsCount.lastName}
                     </span>
@@ -194,7 +241,7 @@ const LeadsTable = () => {
                 <th className="py-2 border border-gray-300 text-left px-4 w-[24%] bg-gray-100 relative">
                   LinkedIn Profile URL
                   {errorsCount.linkedinProfileUrl > 0 && (
-                    <span className="ml-2 text-red-500 absolute right-2 top-1/2 transform -translate-y-1/2">
+                    <span className="ml-2 text-red-400 absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-x-1 bg-red-100 rounded-full px-2">
                       <Image
                         src="/close-circle.svg"
                         alt="error icon"
@@ -236,13 +283,23 @@ const LeadsTable = () => {
                         className="w-full bg-transparent focus:outline-none"
                       />
                       {errors.name && (
-                        <Image
-                          src="/info-circle.svg"
-                          alt="Error"
-                          width={20}
-                          height={0}
-                          className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                        />
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Image
+                                src="/info-circle.svg"
+                                alt="Error"
+                                width={20}
+                                height={0}
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                              />
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-black text-white border-none">
+                              <p>Missing Name</p>
+                              <p>Format Example: John</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
                     </td>
                     <td
@@ -261,13 +318,23 @@ const LeadsTable = () => {
                         className="w-full bg-transparent focus:outline-none"
                       />
                       {errors.lastName && (
-                        <Image
-                          src="/info-circle.svg"
-                          alt="Error"
-                          width={20}
-                          height={0}
-                          className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                        />
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Image
+                                src="/info-circle.svg"
+                                alt="Error"
+                                width={20}
+                                height={0}
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                              />
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-black text-white border-none">
+                              <p>Missing Last Name</p>
+                              <p>Format Example: Doe</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
                     </td>
                     <td
@@ -290,13 +357,30 @@ const LeadsTable = () => {
                         className="w-full bg-transparent focus:outline-none"
                       />
                       {errors.companyDomain && (
-                        <Image
-                          src="/info-circle.svg"
-                          alt="Error"
-                          width={20}
-                          height={0}
-                          className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                        />
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Image
+                                src="/info-circle.svg"
+                                alt="Error"
+                                width={20}
+                                height={0}
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                              />
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-black text-white border-none">
+                              <p>
+                                {lead.companyDomain
+                                  ? "Invalid Company Domain"
+                                  : "Missing Company Domain"}
+                              </p>
+                              <p>
+                                Format Example: google.com or
+                                https://www.google.com/
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
                     </td>
                     <td
@@ -319,13 +403,29 @@ const LeadsTable = () => {
                         className="w-full bg-transparent focus:outline-none"
                       />
                       {errors.linkedinProfileUrl && (
-                        <Image
-                          src="/info-circle.svg"
-                          alt="Error"
-                          width={20}
-                          height={0}
-                          className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                        />
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Image
+                                src="/info-circle.svg"
+                                alt="Error"
+                                width={20}
+                                height={0}
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                              />
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-black text-white border-none">
+                              <p>
+                                {lead.linkedinProfileUrl
+                                  ? "Invalid LinkedIn URL"
+                                  : "Missing LinkedIn URL"}
+                              </p>
+                              <p>
+                                Format Example: https://linkedin.com/in/johndoe
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
                     </td>
                   </tr>

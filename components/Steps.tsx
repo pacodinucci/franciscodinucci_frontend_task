@@ -7,7 +7,7 @@ const Steps: React.FC = () => {
     "Upload",
     "Review",
     "Validation",
-    "Confirm",
+    "Confirmation",
     "Complete",
   ]);
   const currentStep = useSelector(
