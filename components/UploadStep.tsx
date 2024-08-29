@@ -1,26 +1,26 @@
-import React, { useState } from "react";
+import React from "react";
 import FileUpload from "./FileUpload";
 import { Separator } from "./ui/separator";
 import { sofia } from "@/lib/fonts";
 import Link from "next/link";
 import Image from "next/image";
-import { useDispatch, UseDispatch } from "react-redux";
-import { clearLeads } from "@/redux/slices/leadsSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { clearLeads, setUploadedFile } from "@/redux/slices/leadsSlice";
 import { previousStep } from "@/redux/slices/stepsSlice";
+import { RootState } from "@/redux/store";
 
 const UploadStep = () => {
   const dispatch = useDispatch();
-  const [file, setFile] = useState<File | null>(null);
-  const [leadsCount, setLeadsCount] = useState<number | null>(null);
+  const uploadedFile = useSelector(
+    (state: RootState) => state.leads.uploadedFile
+  ); // Use Redux state
+  const fileName = useSelector((state: RootState) => state.leads.fileName);
 
   const handleFileUpload = (uploadedFile: File, leadsCount: number) => {
-    setFile(uploadedFile);
-    setLeadsCount(leadsCount);
+    dispatch(setUploadedFile({ file: uploadedFile, leadsCount }));
   };
 
   const handleDelete = () => {
-    setFile(null);
-    setLeadsCount(null);
     dispatch(clearLeads());
     dispatch(previousStep());
   };
@@ -36,8 +36,7 @@ const UploadStep = () => {
       </div>
       <Separator />
       <div className="flex flex-col justify-center items-center py-4 pt-6">
-        {!file ? (
-          // Mostrar componente de carga de archivos
+        {!uploadedFile ? (
           <FileUpload onFileUpload={handleFileUpload} />
         ) : (
           <div className="w-1/2 flex flex-col items-center">
@@ -52,17 +51,18 @@ const UploadStep = () => {
                   height={0}
                 />
                 <div className="ml-4">
-                  <p className="font-bold text-gray-700">{file.name}</p>
+                  <p className="font-bold text-gray-700">
+                    {uploadedFile.file.name}
+                  </p>
                   <p className="text-sm text-gray-500">
-                    {(file.size / 1024).toFixed(1)} KB | {leadsCount} leads
-                    found
+                    {(uploadedFile.file.size / 1024).toFixed(1)} KB |{" "}
+                    {uploadedFile.leadsCount} leads found
                   </p>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
                 <button
                   onClick={() => {
-                    setFile(null);
                     dispatch(clearLeads());
                     dispatch(previousStep());
                   }}

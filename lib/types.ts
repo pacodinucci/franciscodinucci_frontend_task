@@ -21,6 +21,7 @@ export interface LeadState {
   leads: Lead[];
   fileName: string | null;
   totalErrorRecords: number;
+  uploadedFile: { file: File; leadsCount: number } | null;
 }
 
 export interface HeaderBarProps {

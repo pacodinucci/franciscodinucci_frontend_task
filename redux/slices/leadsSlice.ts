@@ -5,6 +5,7 @@ const initialState: LeadState = {
   leads: [],
   fileName: null,
   totalErrorRecords: 0,
+  uploadedFile: null,
 };
 
 const leadsSlice = createSlice({
@@ -28,10 +29,21 @@ const leadsSlice = createSlice({
     addLeads: (state, action: PayloadAction<Lead[]>) => {
       state.leads = [...state.leads, ...action.payload];
     },
+    setUploadedFile: (
+      state,
+      action: PayloadAction<{ file: File; leadsCount: number }>
+    ) => {
+      state.uploadedFile = action.payload;
+    },
   },
 });
 
-export const { setLeads, clearLeads, setTotalErrorRecords, addLeads } =
-  leadsSlice.actions;
+export const {
+  setLeads,
+  clearLeads,
+  setTotalErrorRecords,
+  addLeads,
+  setUploadedFile,
+} = leadsSlice.actions;
 
 export default leadsSlice.reducer;
