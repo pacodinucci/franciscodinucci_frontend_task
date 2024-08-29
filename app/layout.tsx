@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import Sidebar from "@/components/SidebarMenu";
+import Footer from "@/components/Footer";
+import { Providers } from "@/redux/provider/providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,7 +19,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body
+        className={`${inter.className} h-screen flex flex-col justify-between`}
+      >
+        <Providers>
+          <div className="flex flex-1">
+            <Sidebar />
+            <div className="flex-1">{children}</div>
+          </div>
+          <Footer />
+        </Providers>
+      </body>
     </html>
   );
 }
